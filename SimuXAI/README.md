@@ -1,0 +1,1 @@
+This folder contains all the blog posts simulation files.
