@@ -39,6 +39,7 @@ if (pimple.transonic())
           - fvm::laplacian(rhorAUf, p)
          ==
             parcels.Srho()
+	  + surfaceFilm.Srho()
           + fvOptions(psi, p, rho.name())
         );
 
@@ -47,7 +48,7 @@ if (pimple.transonic())
         if (pimple.finalNonOrthogonalIter())
         {
             phi == pEqn.flux();
-        }
+	}
     }
 }
 else

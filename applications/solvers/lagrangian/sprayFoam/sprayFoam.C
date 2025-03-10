@@ -34,6 +34,7 @@ Description
 #include "dynamicFvMesh.H"
 #include "turbulenceModel.H"
 #include "basicSprayCloud.H"
+#include "surfaceFilmModel.H"
 #include "psiReactionThermo.H"
 #include "CombustionModel.H"
 #include "radiationModel.H"
@@ -124,6 +125,7 @@ int main(int argc, char *argv[])
         }
 
         parcels.evolve();
+        surfaceFilm.evolve();
 
         #include "rhoEqn.H"
 

@@ -28,6 +28,7 @@ tmp<fv::convectionScheme<scalar>> mvConvection
                 parcels.SYi(i, Yi)
               + combustion->R(Yi)
               + fvOptions(rho, Yi)
+	      + surfaceFilm.Srho(i)
             );
 
             YEqn.relax();

@@ -118,4 +118,5 @@ fields.add(thermo.he());
 #include "createMRF.H"
 #include "createClouds.H"
 #include "createRadiationModel.H"
+#include "createSurfaceFilmModel.H"
 #include "createFvOptions.H"

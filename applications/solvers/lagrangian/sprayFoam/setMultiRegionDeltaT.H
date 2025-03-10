@@ -22,27 +22,32 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Global
-    rhoEqn
+    setMultiRegionDeltaT
 
 Description
-    Solve the continuity for density.
+    Reset the timestep to maintain a constant maximum Courant numbers.
+    Reduction of time-step is immediate, but increase is damped to avoid
+    unstable oscillations.
 
 \*---------------------------------------------------------------------------*/
 
+if (adjustTimeStep)
 {
-    fvScalarMatrix rhoEqn
+    const scalar maxDeltaTFact =
+        min(maxCo/(CoNum + small), maxCo/(surfaceFilm.CourantNumber() + small));
+    const scalar deltaTFact =
+        min(min(maxDeltaTFact, 1.0 + 0.1*maxDeltaTFact), 1.2);
+
+    runTime.setDeltaT
     (
-        fvm::ddt(rho)
-      + fvc::div(phi)
-      ==
-        parcels.Srho(rho)
-      + surfaceFilm.Srho()
-      + fvOptions(rho)
+        min
+        (
+            deltaTFact*runTime.deltaTValue(),
+            maxDeltaT
+        )
     );
 
-    rhoEqn.solve();
-
-    fvOptions.correct(rho);
+    Info<< "deltaT = " <<  runTime.deltaTValue() << endl;
 }
 
 // ************************************************************************* //
