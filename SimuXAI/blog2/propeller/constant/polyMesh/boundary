@@ -1,0 +1,89 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  7
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+7
+(
+    inlet
+    {
+        type            patch;
+        nFaces          652;
+        startFace       1576984;
+    }
+    outlet
+    {
+        type            patch;
+        nFaces          112;
+        startFace       1577636;
+    }
+    outerCylinder
+    {
+        type            wall;
+        inGroups        List<word> 1(wall);
+        nFaces          960;
+        startFace       1577748;
+    }
+    propellerStem
+    {
+        type            wall;
+        inGroups        List<word> 1(wall);
+        nFaces          3072;
+        startFace       1578708;
+    }
+    propellerTip
+    {
+        type            wall;
+        inGroups        List<word> 1(wall);
+        nFaces          25529;
+        startFace       1581780;
+    }
+    AMI1
+    {
+        type            cyclicAMI;
+        inGroups        List<word> 
+2
+(
+cyclicAMI
+rotating
+)
+;
+        nFaces          22416;
+        startFace       1607309;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  AMI2;
+        method          faceAreaWeightAMI;
+    }
+    AMI2
+    {
+        type            cyclicAMI;
+        inGroups        List<word> 
+2
+(
+cyclicAMI
+rotating
+)
+;
+        nFaces          22416;
+        startFace       1629725;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  AMI1;
+        method          faceAreaWeightAMI;
+    }
+)
+
+// ************************************************************************* //
