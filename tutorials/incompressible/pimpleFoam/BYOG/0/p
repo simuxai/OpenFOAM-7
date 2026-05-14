@@ -8,46 +8,45 @@
 FoamFile
 {
     version     2.0;
-    format      binary;
-    class       polyBoundaryMesh;
-    location    "constant/polyMesh";
-    object      boundary;
+    format      ascii;
+    class       volScalarField;
+    object      p;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-5
-(
-    frontAndBack
-    {
-        type            patch;
-        nFaces          800;
-        startFace       22800;
-    }
+#include        "include/initialConditions"
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform $pressure;
+
+boundaryField
+{
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
     inlet
     {
-        type            patch;
-        nFaces          400;
-        startFace       23600;
+        type            zeroGradient;
     }
+
     outlet
     {
-        type            patch;
-        nFaces          400;
-        startFace       24000;
+        type            fixedValue;
+        value           $internalField;
     }
+
     lowerWall
     {
-        type            wall;
-        inGroups        List<word> 1(wall);
-        nFaces          400;
-        startFace       24400;
+        type            zeroGradient;
     }
-    upperWall
+
+    BYOGGroup
     {
-        type            patch;
-        nFaces          400;
-        startFace       24800;
+        type            zeroGradient;
     }
-)
+
+    #include "include/frontBackUpperPatches"
+}
 
 // ************************************************************************* //
