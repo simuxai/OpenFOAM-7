@@ -13,5 +13,3 @@ Follow these steps to run a OF tutorial:
    sudo apt install libqt5help5
 6. git clone ThirdParty-7
 7. ./Allwmake (no need to install ParaView just yet)
-8. 
-
