@@ -20,8 +20,14 @@ solvers
     {
         solver          GAMG;
         smoother        GaussSeidel;
-        tolerance       1e-7;
+        tolerance       1e-06;
         relTol          0.01;
+    }
+
+    pFinal
+    {
+        $p;
+        relTol          0;
     }
 
     Phi
@@ -29,58 +35,19 @@ solvers
         $p;
     }
 
-    U
+    "(U|k)"
     {
         solver          smoothSolver;
-        smoother        GaussSeidel;
-        tolerance       1e-8;
+        smoother        symGaussSeidel;
+        tolerance       1e-05;
         relTol          0.1;
-        nSweeps         1;
     }
 
-    k
-    {
-        solver          smoothSolver;
-        smoother        GaussSeidel;
-        tolerance       1e-8;
-        relTol          0.1;
-        nSweeps         1;
-    }
-
-    omega
-    {
-        solver          smoothSolver;
-        smoother        GaussSeidel;
-        tolerance       1e-8;
-        relTol          0.1;
-        nSweeps         1;
-    }
-        "(U|k|omega)Final"
+    "(U|k)Final"
     {
         $U;
         tolerance       1e-05;
         relTol          0;
-    }
-}
-
-SIMPLE
-{
-    nNonOrthogonalCorrectors 0;
-    consistent yes;
-}
-
-potentialFlow
-{
-    nNonOrthogonalCorrectors 10;
-}
-
-relaxationFactors
-{
-    equations
-    {
-        U               0.9;
-        k               0.7;
-        omega           0.7;
     }
 }
 
@@ -89,14 +56,28 @@ PIMPLE
     nOuterCorrectors 1;
     nCorrectors     2;
     nNonOrthogonalCorrectors 0;
-    pRefCell        1001;
+    pRefCell        0;
     pRefValue       0;
 }
 
-
-cache
+potentialFlow
 {
-    grad(U);
+    nNonOrthogonalCorrectors 10;
 }
+
+SIMPLE
+{
+    nNonOrthogonalCorrectors 0;
+    consistent yes;
+}
+
+relaxationFactors
+{
+    equations
+    {
+        ".*"            1;
+    }
+}
+
 
 // ************************************************************************* //
