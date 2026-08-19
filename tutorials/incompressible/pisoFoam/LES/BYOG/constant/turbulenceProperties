@@ -19,13 +19,18 @@ simulationType  LES;
 
 LES
 {
-    LESModel        kEqn;
+    LESModel        dynamicKEqn;
 
     turbulence      on;
 
     printCoeffs     on;
 
     delta           cubeRootVol;
+
+    dynamicKEqnCoeffs
+    {
+        filter simple;
+    }
 
     cubeRootVolCoeffs
     {
