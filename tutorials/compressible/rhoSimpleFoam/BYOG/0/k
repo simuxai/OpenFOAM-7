@@ -21,10 +21,26 @@ internalField   uniform 1;
 
 boundaryField
 {
-    Default_Boundary_Region
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    lowerWall
     {
         type            kqRWallFunction;
         value           uniform 1;
+    }
+    BYOG
+    {
+        type            kqRWallFunction;
+        value           uniform 1;
+    }
+    upperWall
+    {
+        type            slip;
+    }
+    frontAndBack
+    {
+        type            slip;
     }
     inlet
     {

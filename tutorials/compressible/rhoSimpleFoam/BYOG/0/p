@@ -20,7 +20,22 @@ internalField   uniform 110000;
 
 boundaryField
 {
-    Default_Boundary_Region
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    lowerWall
+    {
+        type            zeroGradient;
+    }
+    BYOG
+    {
+        type            zeroGradient;
+    }
+    upperWall
+    {
+        type            zeroGradient;
+    }
+    frontAndBack
     {
         type            zeroGradient;
     }

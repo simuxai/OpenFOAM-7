@@ -21,6 +21,9 @@ internalField   uniform 1000;
 
 boundaryField
 {
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
     inlet
     {
         type            fixedValue;
@@ -32,26 +35,23 @@ boundaryField
         inletValue      uniform 1000;
         value           uniform 1000;
     }
-    bottomWall
-    {
-        type            inletOutlet;
-        inletValue      uniform 1000;
-        value           uniform 1000;
-    }
-    topWall
-    {
-        type            inletOutlet;
-        inletValue      uniform 1000;
-        value           uniform 1000;
-    }
-    prismWall
+    lowerWall
     {
         type            kqRWallFunction;
         value           uniform 1000;
     }
-    defaultFaces
+    BYOG
     {
-        type            empty;
+        type            kqRWallFunction;
+        value           uniform 1000;
+    }
+    upperWall
+    {
+        type            slip;
+    }
+    frontAndBack
+    {
+        type            slip;
     }
 }
 

@@ -20,6 +20,9 @@ internalField   uniform 100000;
 
 boundaryField
 {
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
     inlet
     {
         type            fixedValue;
@@ -37,24 +40,21 @@ boundaryField
         value           uniform 100000;
     }
 
-    bottomWall
+    lowerWall
     {
         type            zeroGradient;
     }
-
-    topWall
+    BYOG
     {
         type            zeroGradient;
     }
-
-    prismWall
+    upperWall
     {
         type            zeroGradient;
     }
-
-    defaultFaces
+    frontAndBack
     {
-        type            empty;
+        type            zeroGradient;
     }
 }
 

@@ -21,12 +21,33 @@ internalField   uniform 0;
 
 boundaryField
 {
-    Default_Boundary_Region
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    lowerWall
     {
         type            nutkWallFunction;
         Cmu             0.09;
         kappa           0.41;
         E               9.8;
+        value           uniform 0;
+    }
+    BYOG
+    {
+        type            nutkWallFunction;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
+        value           uniform 0;
+    }
+    upperWall
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+    frontAndBack
+    {
+        type            calculated;
         value           uniform 0;
     }
     inlet

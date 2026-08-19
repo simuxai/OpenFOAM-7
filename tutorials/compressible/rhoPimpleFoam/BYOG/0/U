@@ -20,6 +20,9 @@ internalField   uniform (650 0 0);
 
 boundaryField
 {
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
     inlet
     {
         type            fixedValue;
@@ -33,34 +36,21 @@ boundaryField
         value           uniform (0 0 0);
     }
 
-    bottomWall
-    {
-        type            supersonicFreestream;
-        pInf            100000;
-        TInf            300;
-        UInf            (650 0 0);
-        gamma           1.28418;
-        value           uniform (650 0 0);
-    }
-
-    topWall
-    {
-        type            supersonicFreestream;
-        pInf            100000;
-        TInf            300;
-        UInf            (650 0 0);
-        gamma           1.28418;
-        value           uniform (650 0 0);
-    }
-
-    prismWall
+    lowerWall
     {
         type            noSlip;
     }
-
-    defaultFaces
+    BYOG
     {
-        type            empty;
+        type            noSlip;
+    }
+    upperWall
+    {
+        type            slip;
+    }
+    frontAndBack
+    {
+        type            slip;
     }
 }
 

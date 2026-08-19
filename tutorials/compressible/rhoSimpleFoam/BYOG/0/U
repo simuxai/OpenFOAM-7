@@ -20,9 +20,24 @@ internalField   uniform (0 0 0);
 
 boundaryField
 {
-    Default_Boundary_Region
+    //- Set patchGroups for constraint patches
+    #includeEtc "caseDicts/setConstraintTypes"
+
+    lowerWall
     {
         type            noSlip;
+    }
+    BYOG
+    {
+        type            noSlip;
+    }
+    upperWall
+    {
+        type            slip;
+    }
+    frontAndBack
+    {
+        type            slip;
     }
     inlet
     {
