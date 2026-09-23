@@ -38,6 +38,7 @@ SourceFiles
 #include "IOdictionary.H"
 #include "Switch.H"
 #include "scalarField.H"
+#include "labelField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -153,6 +154,22 @@ public:
             const scalar T,
             const scalar p
         ) = 0;
+
+        //- Reduce the mechanism using ML data (SL-GPS)
+        //  Only implemented by the GPS reduction methods
+        virtual void reduceMechanism
+        (
+            const scalarField& c,
+            const scalar T,
+            const scalar p,
+            const scalarField& data,
+            const labelField& always_inds,
+            const labelField& never_inds,
+            const labelField& vari_inds
+        )
+        {
+            NotImplemented;
+        }
 };
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -27,6 +27,10 @@ License
 #include "UniformField.H"
 #include "localEulerDdtScheme.H"
 #include "clockTime.H"
+#include "scope_guard.hpp"
+
+#include <cstdint>
+#include <vector>
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -47,6 +51,10 @@ Foam::TDACChemistryModel<ReactionThermo, ThermoType>::TDACChemistryModel
      || fv::localEulerDdt::enabled(this->mesh())
     ),
     timeSteps_(0),
+    gpsActive_(false),
+    graph_(nullptr),
+    inputPh_({nullptr, 0}),
+    output_({nullptr, 0}),
     NsDAC_(this->nSpecie_),
     completeC_(this->nSpecie_, 0),
     reactionsDisabled_(this->reactions_.size(), false),
@@ -86,6 +94,49 @@ Foam::TDACChemistryModel<ReactionThermo, ThermoType>::TDACChemistryModel
         *this,
         *this
     );
+
+    // SL-GPS: read ML configuration and load the TensorFlow graph only when
+    // a GPS reduction method is selected, so other cases are unaffected
+    if (mechRed_->active() && mechRed_->type().find("GPS") == 0)
+    {
+        const dictionary& tdacDict = this->subDict("TDACCoeffs");
+
+        tdacDict.lookup("graphPath") >> graphPath_;
+        tdacDict.lookup("inputLayerName") >> inputLayerName_;
+        tdacDict.lookup("outputLayerName") >> outputLayerName_;
+
+        tdacDict.lookup("alwaysIncludedSpecies") >> always_inds_;
+        tdacDict.lookup("neverIncludedSpecies") >> never_inds_;
+        tdacDict.lookup("variablyIncludedSpecies") >> vari_inds_;
+        tdacDict.lookup("inputIndices") >> input_inds_;
+        tdacDict.lookup("inputMaxValues") >> input_maxes_;
+        tdacDict.lookup("inputMinValues") >> input_mins_;
+
+        graph_ = tf_utils::LoadGraph(graphPath_.c_str());
+
+        if (!graph_)
+        {
+            FatalErrorInFunction
+                << "Cannot load TensorFlow graph " << graphPath_
+                << exit(FatalError);
+        }
+
+        inputPh_ =
+            {TF_GraphOperationByName(graph_, inputLayerName_.c_str()), 0};
+        output_ =
+            {TF_GraphOperationByName(graph_, outputLayerName_.c_str()), 0};
+
+        if (!inputPh_.oper || !output_.oper)
+        {
+            FatalErrorInFunction
+                << "Cannot find layer " << inputLayerName_
+                << " or " << outputLayerName_
+                << " in TensorFlow graph " << graphPath_
+                << exit(FatalError);
+        }
+
+        gpsActive_ = true;
+    }
 
     // When the mechanism reduction method is used, the 'active' flag for every
     // species should be initialized (by default 'active' is true)
@@ -141,7 +192,12 @@ Foam::TDACChemistryModel<ReactionThermo, ThermoType>::TDACChemistryModel
 
 template<class ReactionThermo, class ThermoType>
 Foam::TDACChemistryModel<ReactionThermo, ThermoType>::~TDACChemistryModel()
-{}
+{
+    if (graph_)
+    {
+        tf_utils::DeleteGraph(graph_);
+    }
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -598,6 +654,89 @@ Foam::scalar Foam::TDACChemistryModel<ReactionThermo, ThermoType>::solve
 
     scalarField Rphiq(this->nEqns() + nAdditionalEqn);
 
+    // SL-GPS: batched neural-network inference over all cells
+    std::vector<float> gpsData;
+    label nVariInds = 0;
+
+    if (gpsActive_)
+    {
+        const label nInputInds = input_maxes_.size();
+        nVariInds = vari_inds_.size();
+        const label nCells = rho.size();
+
+        std::vector<float> inputVals(nCells*nInputInds);
+
+        scalarField cCell(this->nSpecie_);
+
+        forAll(rho, celli)
+        {
+            const scalar rhoi = rho[celli];
+
+            scalar csum = 0;
+            for (label i=0; i<this->nSpecie_; i++)
+            {
+                cCell[i] = rhoi*this->Y_[i][celli]/this->specieThermo_[i].W();
+                csum += cCell[i];
+            }
+
+            inputVals[celli*nInputInds] =
+                (T[celli] - input_mins_[0])/(input_maxes_[0] - input_mins_[0]);
+            inputVals[celli*nInputInds + 1] = 0;
+
+            for (label i=2; i<nInputInds; i++)
+            {
+                const scalar molFrac = cCell[input_inds_[i-2]]/csum;
+                inputVals[celli*nInputInds + i] =
+                    (molFrac - input_mins_[i])
+                   /(input_maxes_[i] - input_mins_[i]);
+            }
+        }
+
+        auto status = TF_NewStatus();
+        SCOPE_EXIT{ TF_DeleteStatus(status); };
+        auto options = TF_NewSessionOptions();
+        SCOPE_EXIT{ TF_DeleteSessionOptions(options); };
+        auto sess = TF_NewSession(graph_, options, status);
+        SCOPE_EXIT{ tf_utils::DeleteSession(sess); };
+
+        const std::vector<std::int64_t> inputDims =
+            {nCells, nInputInds};
+
+        auto inputTensor = tf_utils::CreateTensor
+        (
+            TF_FLOAT,
+            inputDims.data(), inputDims.size(),
+            inputVals.data(), inputVals.size()*sizeof(float)
+        );
+
+        // Allocated by TF_SessionRun
+        TF_Tensor* outputTensor = nullptr;
+
+        SCOPE_EXIT{ tf_utils::DeleteTensor(inputTensor); };
+        SCOPE_EXIT{ if (outputTensor) tf_utils::DeleteTensor(outputTensor); };
+
+        TF_SessionRun
+        (
+            sess,
+            nullptr,
+            &inputPh_, &inputTensor, 1,
+            &output_, &outputTensor, 1,
+            nullptr, 0,
+            nullptr,
+            status
+        );
+
+        if (TF_GetCode(status) != TF_OK || !outputTensor)
+        {
+            FatalErrorInFunction
+                << "TensorFlow inference failed: " << TF_Message(status)
+                << exit(FatalError);
+        }
+
+        const auto outData = static_cast<float*>(TF_TensorData(outputTensor));
+        gpsData.assign(outData, outData + nCells*nVariInds);
+    }
+
     forAll(rho, celli)
     {
         const scalar rhoi = rho[celli];
@@ -650,8 +789,26 @@ Foam::scalar Foam::TDACChemistryModel<ReactionThermo, ThermoType>::solve
 
             if (reduced)
             {
-                // Reduce mechanism change the number of species (only active)
-                mechRed_->reduceMechanism(c, Ti, pi);
+                if (gpsActive_)
+                {
+                    // Reduce with the per-cell NN species-selection output
+                    scalarField dataCell(nVariInds);
+                    for (label i=0; i<nVariInds; i++)
+                    {
+                        dataCell[i] = gpsData[nVariInds*celli + i];
+                    }
+
+                    mechRed_->reduceMechanism
+                    (
+                        c, Ti, pi, dataCell,
+                        always_inds_, never_inds_, vari_inds_
+                    );
+                }
+                else
+                {
+                    // Reduce mechanism change the number of species (only active)
+                    mechRed_->reduceMechanism(c, Ti, pi);
+                }
                 nActiveSpecies += mechRed_->NsSimp();
                 nAvg++;
                 scalar timeIncr = clockTime_.timeIncrement();

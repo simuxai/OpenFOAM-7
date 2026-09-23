@@ -34,6 +34,8 @@ License
 #include "DRGEP.H"
 #include "EFA.H"
 #include "PFA.H"
+#include "GPS_ML.H"
+#include "GPS_ML_Simult.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -114,6 +116,20 @@ License
     makeChemistryReductionMethod                                               \
     (                                                                          \
         PFA,                                                                   \
+        CompChemModel,                                                         \
+        Thermo                                                                 \
+    );                                                                         \
+                                                                               \
+    makeChemistryReductionMethod                                               \
+    (                                                                          \
+        GPS_ML,                                                                \
+        CompChemModel,                                                         \
+        Thermo                                                                 \
+    );                                                                         \
+                                                                               \
+    makeChemistryReductionMethod                                               \
+    (                                                                          \
+        GPS_ML_Simult,                                                         \
         CompChemModel,                                                         \
         Thermo                                                                 \
     );                                                                         \

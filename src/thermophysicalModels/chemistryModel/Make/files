@@ -1,6 +1,8 @@
 chemistryModel/basicChemistryModel/basicChemistryModel.C
 chemistryModel/BasicChemistryModel/BasicChemistryModels.C
 
+ML/tf_utils.C
+
 chemistryModel/TDACChemistryModel/reduction/makeChemistryReductionMethods.C
 chemistryModel/TDACChemistryModel/tabulation/makeChemistryTabulationMethods.C
 

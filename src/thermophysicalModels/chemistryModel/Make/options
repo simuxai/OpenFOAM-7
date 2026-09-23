@@ -15,4 +15,7 @@ LIB_LIBS = \
     -lspecie \
     -lODE \
     -lfiniteVolume \
-    -lmeshTools
+    -lmeshTools \
+    -L$(FOAM_LIBBIN)/../../../../OF_ML/lib \
+    -Wl,-rpath,$(FOAM_LIBBIN)/../../../../OF_ML/lib \
+    -ltensorflow

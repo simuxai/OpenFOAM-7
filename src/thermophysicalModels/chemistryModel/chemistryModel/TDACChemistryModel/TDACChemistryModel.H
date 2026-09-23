@@ -68,6 +68,8 @@ SourceFiles
 #include "chemistryReductionMethod.H"
 #include "chemistryTabulationMethod.H"
 #include "OFstream.H"
+#include "labelField.H"
+#include "tf_utils.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -88,6 +90,26 @@ class TDACChemistryModel
         bool variableTimeStep_;
 
         label timeSteps_;
+
+        // SL-GPS machine-learning mechanism reduction (active only when the
+        // reduction method is GPS_ML or GPS_ML_Simult)
+        bool gpsActive_;
+
+        //- TensorFlow model (string allows special characters like '/')
+        string graphPath_;
+        string inputLayerName_;
+        string outputLayerName_;
+
+        labelField always_inds_;
+        labelField never_inds_;
+        labelField vari_inds_;
+        labelField input_inds_;
+        scalarField input_maxes_;
+        scalarField input_mins_;
+
+        TF_Graph* graph_;
+        TF_Output inputPh_;
+        TF_Output output_;
 
         // Mechanism reduction
         label NsDAC_;
