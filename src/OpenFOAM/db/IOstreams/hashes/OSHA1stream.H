@@ -80,6 +80,18 @@ public:
             sha1_.append(str, n);
             return n;
         }
+
+        //- Handle single-character writes (required by modern libstdc++,
+        //  which otherwise sets badbit via the default EOF return)
+        virtual int overflow(int c = EOF)
+        {
+            if (c != EOF)
+            {
+                const char ch = c;
+                sha1_.append(&ch, 1);
+            }
+            return c;
+        }
 };
 
 
